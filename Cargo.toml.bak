@@ -22,7 +22,8 @@ path = "src/main.rs"
 # clap is pinned below 4.5 because newer clap_lex releases require the
 # edition2024 Cargo feature, which needs a newer toolchain than the
 # rust-version (1.74) declared above.
-clap = { version = "~4.4", features = ["derive", "color", "wrap_help"] }
+clap = { version = "4", features = ["derive", "color", "wrap_help"] }
+clap-version-flag = "1.0.7"
 anyhow = "1"
 colored = "2"
 is-terminal = "0.4"

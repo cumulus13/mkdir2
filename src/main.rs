@@ -5,12 +5,19 @@ mod mkdir;
 mod pathnorm;
 
 use clap::Parser;
+use clap_version_flag::colorful_version;
 use cli::Cli;
 use color::{should_use_color, ColorMode, Theme};
 use std::process::ExitCode;
 use std::str::FromStr;
 
 fn main() -> ExitCode {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() == 2 && (args[1] == "-V" || args[1] == "--version") {
+        let version = colorful_version!();
+        version.print_and_exit();
+    }
+    
     let cli = Cli::parse();
 
     let color_mode = match ColorMode::from_str(&cli.color) {
