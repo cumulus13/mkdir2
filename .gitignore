@@ -16,3 +16,5 @@ Thumbs.db
 
 # Added entries (1 items)
 downloads/
+# PT backup directory
+.pt/

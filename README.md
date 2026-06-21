@@ -89,6 +89,19 @@ mkdir2 --dry-run new_stuff/{a,b,c}
 mkdir2 --from dirs.txt --gitkeep
 ```
 
+> **Note for Bash/zsh users:** `\` is always treated as a path separator by
+> mkdir2, the same as `/`. But on an interactive Unix shell, an *unquoted*
+> backslash is consumed by the shell itself as an escape character before
+> mkdir2 ever sees it — so `mkdir2 test\ me` does not create `test/me`; it
+> creates a single directory named `test me` (the shell strips the `\` and
+> keeps the space literal). Likewise `mkdir2 test\me` becomes a single
+> directory `testme` (the shell deletes the `\` entirely). To actually use
+> `\` as a separator from Bash/zsh, quote the argument so the shell leaves
+> it alone: `mkdir2 'test\me'` creates nested `test/me` as expected. This
+> only matters for interactive Unix shells — it's a non-issue on Windows
+> shells, and on patterns read from a `--from` file, since neither goes
+> through Unix shell escaping.
+
 ### All options
 
 | Flag | Description |

@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.4] - 2026-06-22
+### Documentation
+
+- Clarified Bash/zsh shell-escaping behavior around `\` as a path
+  separator: an unquoted backslash is consumed by the shell before
+  mkdir2 ever sees it, so using `\` as a separator from an interactive
+  Unix shell requires quoting the argument.
+
+## [0.1.5] - 2026-06-22
 
 ### Added
 
