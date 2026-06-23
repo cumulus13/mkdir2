@@ -102,6 +102,16 @@ mkdir2 --from dirs.txt --gitkeep
 > shells, and on patterns read from a `--from` file, since neither goes
 > through Unix shell escaping.
 
+> **Note for Windows CMD users:** CMD splits arguments on spaces *before*
+> mkdir2 receives them, so an unquoted pattern like
+> `mkdir2 test2\{test3, test4}` arrives as two broken fragments —
+> `test2\{test3,` and `test4}` — and no expansion fires. Always wrap
+> patterns that contain spaces in double quotes:
+> `mkdir2 "test2\{test3, test4}"`. CMD does not give `\` any special meaning
+> inside double quotes, so the full pattern reaches mkdir2 intact and works
+> correctly. PowerShell behaves the same way: use double quotes for any
+> pattern with spaces.
+
 ### All options
 
 | Flag | Description |

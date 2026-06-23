@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mkdir2 ever sees it, so using `\` as a separator from an interactive
   Unix shell requires quoting the argument.
 
-## [0.1.6] - 2026-06-22
+## [0.1.7] - 2026-06-22
 
 ### Added
 
