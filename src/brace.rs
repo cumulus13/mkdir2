@@ -53,26 +53,23 @@ fn expand_inner(s: &str) -> Vec<String> {
     }
 }
 
-/// Find the first top-level (unescaped, properly nested) `{...}` pair.
+/// Find the first top-level properly-nested `{...}` pair.
 /// Returns byte offsets of the opening and closing brace.
+///
+/// Unlike traditional brace-expansion parsers, we do NOT treat `\` as an
+/// escape character for `{` or `}`, because in mkdir2 `\` is always a path
+/// separator (equivalent to `/`).  A `\{` is therefore a separator followed
+/// by a brace-group opener, not an escaped literal brace.
 fn find_outer_brace(s: &str) -> Option<(usize, usize)> {
     let bytes = s.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
         match bytes[i] {
-            b'\\' => {
-                i += 2;
-                continue;
-            }
             b'{' => {
                 let mut depth: usize = 1;
                 let mut j = i + 1;
                 while j < bytes.len() {
                     match bytes[j] {
-                        b'\\' => {
-                            j += 2;
-                            continue;
-                        }
                         b'{' => depth += 1,
                         b'}' => {
                             depth -= 1;
@@ -95,20 +92,16 @@ fn find_outer_brace(s: &str) -> Option<(usize, usize)> {
 }
 
 /// Split `s` on `sep`, but only when at brace-nesting depth 0.
+/// Surrounding whitespace is trimmed from each part so that
+/// `{a, b, c}` behaves identically to `{a,b,c}`.
+///
+/// `\` is treated as a plain character (path separator), not as an escape.
 fn split_top_level(s: &str, sep: char) -> Vec<String> {
     let mut result = Vec::new();
     let mut depth: i32 = 0;
     let mut current = String::new();
-    let mut chars = s.chars().peekable();
 
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            current.push(c);
-            if let Some(nc) = chars.next() {
-                current.push(nc);
-            }
-            continue;
-        }
+    for c in s.chars() {
         match c {
             '{' => {
                 depth += 1;
@@ -119,12 +112,13 @@ fn split_top_level(s: &str, sep: char) -> Vec<String> {
                 current.push(c);
             }
             c if c == sep && depth == 0 => {
-                result.push(std::mem::take(&mut current));
+                result.push(current.trim().to_string());
+                current = String::new();
             }
             _ => current.push(c),
         }
     }
-    result.push(current);
+    result.push(current.trim().to_string());
     result
 }
 
@@ -222,6 +216,67 @@ mod tests {
         let mut got = expand("dir{1,2,3}");
         got.sort();
         assert_eq!(got, vec!["dir1", "dir2", "dir3"]);
+    }
+
+    #[test]
+    fn spaces_after_commas_are_trimmed() {
+        let mut got = expand("dir{1, 2, 3}");
+        got.sort();
+        assert_eq!(got, vec!["dir1", "dir2", "dir3"]);
+    }
+
+    #[test]
+    fn spaces_before_and_after_commas_are_trimmed() {
+        let mut got = expand("dir{ 1 , 2 , 3 }");
+        got.sort();
+        assert_eq!(got, vec!["dir1", "dir2", "dir3"]);
+    }
+
+    #[test]
+    fn space_trimming_works_with_nested_groups() {
+        let mut got = expand("project/{ src, tests, docs }");
+        got.sort();
+        let mut expected = vec!["project/src", "project/tests", "project/docs"];
+        expected.sort();
+        assert_eq!(got, expected);
+    }
+
+    #[test]
+    fn backslash_before_brace_expands_like_forward_slash() {
+        // expand() keeps \ as-is; normalize_path (called later) converts it to /.
+        // What matters here is that \{ is treated as separator+brace-opener,
+        // not as an escaped literal brace — so expansion actually fires.
+        let got = expand(r"dir1\{dir2,dir3}");
+        assert_eq!(
+            got.len(),
+            2,
+            "should expand to 2 items, not stay as a literal"
+        );
+        assert!(got.iter().any(|s| s.contains("dir2")));
+        assert!(got.iter().any(|s| s.contains("dir3")));
+    }
+
+    #[test]
+    fn backslash_before_brace_with_spaces_trimmed() {
+        let got = expand(r"dir1\{dir2, dir3}");
+        assert_eq!(got.len(), 2);
+        // No item should have a leading space in the dir name
+        for s in &got {
+            assert!(!s.contains(" dir3"), "space must be trimmed: {:?}", s);
+        }
+        assert!(got.iter().any(|s| s.contains("dir2")));
+        assert!(got.iter().any(|s| s.contains("dir3")));
+    }
+
+    #[test]
+    fn backslash_inside_brace_items_is_path_separator() {
+        // {src\main, tests\unit} — backslash inside items is a path separator
+        let mut got = expand(r"{src\main, tests\unit}");
+        got.sort();
+        // normalize_path runs after expand, but expand itself should preserve
+        // the backslash so normalize_path can convert it to /
+        assert!(got.iter().any(|s| s.contains("main")));
+        assert!(got.iter().any(|s| s.contains("unit")));
     }
 
     #[test]

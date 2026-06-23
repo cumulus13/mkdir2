@@ -171,3 +171,35 @@ fn existing_file_at_target_path_fails_instead_of_overwriting() {
         .unwrap();
     assert!(!status.success());
 }
+
+#[test]
+fn spaces_around_commas_in_braces_are_trimmed() {
+    // "dir1/{dir2, dir3}" and "dir1/{dir2,dir3}" must produce identical results.
+    // No leading/trailing space must survive into the created directory names.
+    let dir = tempdir().unwrap();
+    let status = Command::new(bin())
+        .current_dir(dir.path())
+        .arg("dir1/{dir2, dir3}")
+        .status()
+        .unwrap();
+    assert!(status.success());
+    assert!(dir.path().join("dir1/dir2").is_dir());
+    assert!(dir.path().join("dir1/dir3").is_dir());
+    // Confirm the space-prefixed variant does NOT exist.
+    assert!(!dir.path().join("dir1/ dir3").exists());
+}
+
+#[test]
+fn backslash_before_brace_expands_same_as_forward_slash() {
+    // dir1\{dir2,dir3} must create the same dirs as dir1/{dir2,dir3}.
+    let dir = tempdir().unwrap();
+    let status = Command::new(bin())
+        .current_dir(dir.path())
+        .arg(r"dir1\{dir2, dir3}")
+        .status()
+        .unwrap();
+    assert!(status.success());
+    assert!(dir.path().join("dir1/dir2").is_dir());
+    assert!(dir.path().join("dir1/dir3").is_dir());
+    assert!(!dir.path().join("dir1/ dir3").exists());
+}

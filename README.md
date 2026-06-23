@@ -140,6 +140,11 @@ Run `mkdir2 --help` for the full reference.
 | `{a..e}` | `a`, `b`, `c`, `d`, `e` |
 | `a{1,2}b{x,y}` | `a1bx`, `a1by`, `a2bx`, `a2by` (cartesian product) |
 
+> **Spaces around commas are trimmed automatically.** `{dir2, dir3}` and
+> `{dir2,dir3}` produce identical results — the leading/trailing whitespace
+> around each item is stripped before expansion. This means accidental spaces
+> after commas will never create directories with leading-space names.
+
 ### JSON output
 
 ```sh

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Spaces around commas inside brace groups are now trimmed automatically,
+  so `{dir2, dir3}` behaves identically to `{dir2,dir3}`. Prevents
+  accidental directories with leading/trailing-space names caused by
+  typing spaces after commas.
+
 ### Documentation
 
 - Clarified Bash/zsh shell-escaping behavior around `\` as a path
@@ -14,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mkdir2 ever sees it, so using `\` as a separator from an interactive
   Unix shell requires quoting the argument.
 
-## [0.1.5] - 2026-06-22
+## [0.1.6] - 2026-06-22
 
 ### Added
 
